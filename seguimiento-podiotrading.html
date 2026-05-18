@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Seguimiento de Embarques — Podio Trading</title>
+<meta name="description" content="Consultá el estado de tu carga con Podio Trading Comercio Internacional." />
+<link rel="icon" href="https://podiotrading.com/logotipo.webp" type="image/webp" />
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f4f6f9;min-height:100vh;color:#1a1a1a;}
+
+:root{
+  --navy:#1a2e4a;
+  --blue:#2E6DA4;
+  --accent:#378ADD;
+  --light:#E6F1FB;
+  --border:#e0e4ea;
+  --bg:#f4f6f9;
+  --white:#ffffff;
+  --text:#1a1a1a;
+  --muted:#6b7280;
+  --danger:#A32D2D;
+  --danger-bg:#FCEBEB;
+  --success:#27500A;
+  --success-bg:#EAF3DE;
+  --warning:#633806;
+  --warning-bg:#FAEEDA;
+}
+
+header{
+  background:var(--navy);
+  padding:1rem 1.5rem;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+  position:sticky;top:0;z-index:10;
+  box-shadow:0 2px 8px rgba(0,0,0,.18);
+}
+.logo-row{display:flex;align-items:center;gap:12px;}
+.logo-img{height:38px;width:auto;object-fit:contain;}
+.logo-fallback{display:none;align-items:center;gap:10px;}
+.logo-circle{width:38px;height:38px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.logo-circle span{color:var(--navy);font-size:10px;font-weight:600;letter-spacing:.5px;}
+.logo-text{color:#fff;font-size:15px;font-weight:600;line-height:1.2;}
+.logo-sub{color:rgba(255,255,255,.55);font-size:11px;}
+.header-tag{color:rgba(255,255,255,.45);font-size:12px;letter-spacing:.3px;}
+
+main{
+  max-width:600px;margin:2.5rem auto;padding:0 1rem 3rem;
+}
+
+.search-card{
+  background:var(--white);border-radius:14px;
+  border:1px solid var(--border);
+  padding:1.75rem;margin-bottom:1.25rem;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+.search-title{font-size:16px;font-weight:600;color:var(--text);margin-bottom:3px;}
+.search-sub{font-size:13px;color:var(--muted);margin-bottom:1.4rem;}
+
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:1.25rem;}
+@media(max-width:420px){.fields{grid-template-columns:1fr;}}
+
+label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:5px;letter-spacing:.3px;text-transform:uppercase;}
+input{
+  width:100%;height:42px;font-size:14px;padding:0 13px;
+  border:1px solid var(--border);border-radius:8px;
+  background:var(--white);color:var(--text);
+  transition:border-color .15s,box-shadow .15s;
+}
+input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 3px rgba(55,138,221,.15);}
+input::placeholder{color:#b0b7c3;}
+
+.btn{
+  width:100%;height:44px;font-size:14px;font-weight:600;
+  background:var(--navy);color:#fff;border:none;border-radius:8px;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .15s,transform .08s;letter-spacing:.2px;
+}
+.btn:hover{background:var(--blue);}
+.btn:active{transform:scale(.98);}
+.btn:disabled{opacity:.55;cursor:not-allowed;}
+.btn svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;}
+
+.error-msg{
+  margin-top:12px;font-size:13px;color:var(--danger);
+  display:none;text-align:center;padding:9px 12px;
+  background:var(--danger-bg);border-radius:8px;border:1px solid #f7c1c1;
+}
+
+/* RESULT CARD */
+.result-card{
+  background:var(--white);border-radius:14px;
+  border:1px solid var(--border);overflow:hidden;display:none;
+  box-shadow:0 1px 4px rgba(0,0,0,.06);
+}
+
+.rc-top{
+  background:var(--navy);
+  padding:1.1rem 1.4rem;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;
+}
+.rc-emb-lbl{font-size:10px;color:rgba(255,255,255,.55);letter-spacing:.7px;text-transform:uppercase;margin-bottom:2px;}
+.rc-emb-val{font-size:26px;font-weight:700;color:#fff;line-height:1;}
+.rc-cliente{font-size:12px;color:rgba(255,255,255,.65);margin-top:3px;}
+
+.sbadge{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:20px;font-size:12px;font-weight:600;}
+.sbadge-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.s-transito{background:#B5D4F4;color:#042C53;}
+.s-transito .sbadge-dot{background:#185FA5;animation:pulse 2s infinite;}
+.s-aduana{background:#FAC775;color:#412402;}
+.s-aduana .sbadge-dot{background:#BA7517;}
+.s-entregado{background:#C0DD97;color:#173404;}
+.s-entregado .sbadge-dot{background:#3B6D11;}
+.s-pendiente{background:#D3D1C7;color:#2C2C2A;}
+.s-pendiente .sbadge-dot{background:#888780;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+
+/* TIMELINE */
+.rc-tl{padding:1.1rem 1.4rem;border-bottom:1px solid var(--border);}
+.tl-track{display:flex;align-items:flex-start;}
+.tl-step{display:flex;flex-direction:column;align-items:center;flex:1;position:relative;}
+.tl-dot{width:14px;height:14px;border-radius:50%;background:#e9ecef;border:2px solid #ced4da;z-index:1;flex-shrink:0;}
+.tl-dot.done{background:var(--accent);border-color:#185FA5;}
+.tl-dot.active{background:#fff;border:3px solid var(--accent);box-shadow:0 0 0 3px rgba(55,138,221,.18);}
+.tl-conn{position:absolute;top:6px;left:50%;right:-50%;height:2px;background:#e9ecef;z-index:0;}
+.tl-conn.done{background:var(--accent);}
+.tl-step:last-child .tl-conn{display:none;}
+.tl-lbl{font-size:10px;color:var(--muted);margin-top:6px;text-align:center;line-height:1.3;}
+.tl-lbl.active{color:var(--text);font-weight:600;}
+.tl-dates{display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:var(--muted);}
+
+/* FIELDS */
+.rc-fields{display:grid;grid-template-columns:repeat(3,1fr);}
+@media(max-width:440px){.rc-fields{grid-template-columns:1fr 1fr;}}
+.rf{padding:.75rem 1.1rem;border-bottom:1px solid var(--border);border-right:1px solid var(--border);}
+.rf:nth-child(3n){border-right:none;}
+@media(max-width:440px){
+  .rf:nth-child(2n){border-right:none;}
+  .rf:nth-child(3n){border-right:1px solid var(--border);}
+  .rf:nth-child(even){border-right:none !important;}
+}
+.rf-lbl{font-size:10px;color:#9ca3af;letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px;}
+.rf-val{font-size:13px;color:var(--text);font-weight:500;word-break:break-all;}
+
+.rc-footer{padding:.9rem 1.4rem;display:flex;align-items:center;flex-wrap:wrap;gap:10px;border-top:1px solid var(--border);}
+.marine-btn{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:8px 16px;font-size:12px;font-weight:600;
+  border:1px solid var(--border);border-radius:8px;
+  color:var(--text);text-decoration:none;background:var(--white);
+  transition:background .13s;
+}
+.marine-btn:hover{background:var(--bg);}
+.marine-btn svg{width:16px;height:16px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;}
+
+/* LOADING */
+.loading-row{display:none;align-items:center;justify-content:center;gap:10px;padding:2rem;color:var(--muted);font-size:13px;}
+.spinner{width:20px;height:20px;border:2.5px solid #e0e4ea;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* FOOTER */
+footer{text-align:center;margin-top:2.5rem;font-size:12px;color:#b0b7c3;}
+footer a{color:var(--blue);text-decoration:none;}
+footer a:hover{text-decoration:underline;}
+.footer-contact{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin-bottom:12px;padding:14px 1rem;background:var(--white);border-radius:10px;border:1px solid var(--border);}
+.footer-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--navy);text-decoration:none;font-weight:500;transition:color .13s;}
+.footer-link:hover{color:var(--blue);}
+.footer-link svg{width:15px;height:15px;stroke:var(--accent);flex-shrink:0;}
+.footer-copy{margin-top:10px;font-size:12px;color:#b0b7c3;}
+.footer-copy a{color:var(--blue);text-decoration:none;}
+.footer-copy a:hover{text-decoration:underline;}
+
+/* SETUP NOTE (solo en demo) */
+.demo-note{
+  margin-top:1rem;padding:12px 14px;
+  border:1px solid var(--border);border-radius:8px;
+  background:#f9fafb;font-size:12px;color:var(--muted);line-height:1.6;
+}
+.demo-note strong{color:var(--text);}
+.demo-note code{background:#e9ecef;padding:1px 5px;border-radius:4px;font-size:11px;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-row">
+    <img class="logo-img" src="https://podiotrading.com/logotipo.webp" alt="Podio Trading"
+      onerror="this.style.display='none';document.getElementById('logo-fb').style.display='flex';" />
+    <div class="logo-fallback" id="logo-fb">
+      <div class="logo-circle"><span>PT</span></div>
+      <div>
+        <div class="logo-text">Podio Trading</div>
+        <div class="logo-sub">Comercio Internacional</div>
+      </div>
+    </div>
+  </div>
+  <div class="header-tag">Seguimiento de embarques</div>
+</header>
+
+<main>
+
+  <div class="search-card">
+    <div class="search-title">Consultá el estado de tu carga</div>
+    <div class="search-sub">Ingresá tu código de cliente y número de embarque</div>
+    <div class="fields">
+      <div>
+        <label for="inp-codigo">Código de cliente</label>
+        <input id="inp-codigo" type="text" placeholder="Ej: CLI001" autocomplete="off" />
+      </div>
+      <div>
+        <label for="inp-emb">N° de embarque</label>
+        <input id="inp-emb" type="text" placeholder="Ej: 297" autocomplete="off" inputmode="numeric" />
+      </div>
+    </div>
+    <button class="btn" id="btn-buscar" onclick="buscar()">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Consultar estado
+    </button>
+    <div class="error-msg" id="error-msg"></div>
+
+  </div>
+
+  <div class="loading-row" id="loading">
+    <div class="spinner"></div> Consultando tu embarque...
+  </div>
+
+  <div class="result-card" id="result-card"></div>
+
+  <footer>
+    <div class="footer-contact">
+      <a href="https://wa.me/541168916067" target="_blank" rel="noopener" class="footer-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        +11 6891-6067
+      </a>
+      <a href="mailto:info@podiotrading.com" class="footer-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        info@podiotrading.com
+      </a>
+      <a href="https://www.podiotrading.com" target="_blank" rel="noopener" class="footer-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        www.podiotrading.com
+      </a>
+    </div>
+    <div class="footer-copy">
+      &copy; 2026 <a href="https://podiotrading.com" target="_blank">Podio Trading Comercio Internacional</a> · Todos los derechos reservados
+    </div>
+  </footer>
+
+</main>
+
+<script>
+/* ── CONFIGURACIÓN ─────────────────────────────────────────────────────────
+   Reemplazá esta URL con la que te genera Google Apps Script al implementar.
+   Dejala vacía ("") para usar el modo demo con datos de ejemplo.
+   ───────────────────────────────────────────────────────────────────────── */
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbwYqgLrMQOtDEWcOA-4_3Nez89oiXzskJQNHbG-i7IpZowZL9d0IielIgWQkPAtzSm5iw/exec";
+
+/* ── DATOS DEMO ────────────────────────────────────────────────────────────
+   Estos datos se usan solo cuando SHEET_URL está vacía.
+   Columnas según tu Excel: A=emb B=proveedor C=estatus D=invoice E=importe
+   F=etd G=eta H=bl U=cliente V=codigo
+   ───────────────────────────────────────────────────────────────────────── */
+const DEMO = [
+  {emb:"297",proveedor:"TIMING",estatus:"EN TRANSITO",invoice:"C032T26019",importe:"USD 51.885,82",etd:"08/04/2026",eta:"27/05/2026",bl:"NBOBUE264051",buque:"SAN FRANCISCA",cliente:"TIMING S.A.",codigo:"CLI001"},
+  {emb:"298",proveedor:"TIMING",estatus:"EN TRANSITO",invoice:"C033T26020",importe:"USD 32.400,00",etd:"15/04/2026",eta:"05/06/2026",bl:"NBOBUE265100",buque:"MAERSK COLUMBIA",cliente:"TIMING S.A.",codigo:"CLI001"},
+  {emb:"301",proveedor:"TIMING",estatus:"EN ADUANA",invoice:"C029T26014",importe:"USD 18.750,00",etd:"20/03/2026",eta:"10/05/2026",bl:"NBOBUE260033",buque:"MSC GENEVA",cliente:"TIMING S.A.",codigo:"CLI001"},
+  {emb:"285",proveedor:"HANGZHOU TEXTILES",estatus:"ENTREGADO",invoice:"HT-2026-0442",importe:"USD 28.900,00",etd:"01/04/2026",eta:"20/05/2026",bl:"SHOBUE881234",buque:"EVER GIVEN",cliente:"CONFECCIONES DEL NORTE",codigo:"CLI002"},
+  {emb:"290",proveedor:"HANGZHOU TEXTILES",estatus:"EN TRANSITO",invoice:"HT-2026-0501",importe:"USD 41.200,50",etd:"22/04/2026",eta:"15/06/2026",bl:"SHOBUE882900",buque:"CMA CGM LOUIS",cliente:"CONFECCIONES DEL NORTE",codigo:"CLI002"},
+];
+
+const STATUS_CLASS = {"EN TRANSITO":"s-transito","EN ADUANA":"s-aduana","ENTREGADO":"s-entregado","PENDIENTE":"s-pendiente"};
+const STATUS_STEP  = {"EN TRANSITO":1,"EN ADUANA":2,"ENTREGADO":3,"PENDIENTE":0};
+const STAGES = ["Origen","En tránsito","Aduana","Entregado"];
+
+function badge(st){
+  const sc = STATUS_CLASS[st] || "s-pendiente";
+  return `<span class="sbadge ${sc}"><span class="sbadge-dot"></span>${st}</span>`;
+}
+
+function timeline(st, etd, eta){
+  const active = STATUS_STEP[st] !== undefined ? STATUS_STEP[st] : 1;
+  let h = '<div class="tl-track">';
+  STAGES.forEach((s,i)=>{
+    const done = i < active, isActive = i === active;
+    h += `<div class="tl-step">
+      <div class="tl-dot ${done?'done':isActive?'active':''}"></div>
+      <div class="tl-conn ${done?'done':''}"></div>
+      <div class="tl-lbl ${isActive?'active':''}">${s}</div>
+    </div>`;
+  });
+  return h + `</div><div class="tl-dates"><span>ETD: ${etd||'-'}</span><span>ETA: ${eta||'-'}</span></div>`;
+}
+
+function renderCard(e){
+  const buque = e.buque || "";
+  const marine = `https://www.marinetraffic.com/en/ais/home/shipname:${encodeURIComponent(buque)}`;
+  return `
+  <div class="rc-top">
+    <div>
+      <div class="rc-emb-lbl">Embarque N°</div>
+      <div class="rc-emb-val">${e.emb}</div>
+      <div class="rc-cliente">${e.cliente||""}</div>
+    </div>
+    ${badge(e.estatus)}
+  </div>
+  <div class="rc-tl">${timeline(e.estatus, e.etd, e.eta)}</div>
+  <div class="rc-fields">
+    <div class="rf"><div class="rf-lbl">Proveedor</div><div class="rf-val">${e.proveedor||"-"}</div></div>
+    <div class="rf"><div class="rf-lbl">Invoice</div><div class="rf-val">${e.invoice||"-"}</div></div>
+    <div class="rf"><div class="rf-lbl">Importe</div><div class="rf-val">${e.importe||"-"}</div></div>
+    <div class="rf"><div class="rf-lbl">Bill of Lading</div><div class="rf-val">${e.bl||"-"}</div></div>
+    <div class="rf"><div class="rf-lbl">ETD</div><div class="rf-val">${e.etd||"-"}</div></div>
+    <div class="rf"><div class="rf-lbl">ETA</div><div class="rf-val">${e.eta||"-"}</div></div>
+  </div>
+  <div class="rc-footer">
+    ${buque ? `<a class="marine-btn" href="${marine}" target="_blank" rel="noopener">
+      <svg viewBox="0 0 24 24"><path d="M3 17l4-8 4 4 4-6 4 8"/><path d="M3 21h18"/></svg>
+      Ver buque en MarineTraffic
+      <svg viewBox="0 0 24 24" style="width:13px;height:13px;stroke:#9ca3af"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+    </a>` : ""}
+  </div>`;
+}
+
+async function buscar(){
+  const codigo = document.getElementById("inp-codigo").value.trim().toUpperCase();
+  const emb    = document.getElementById("inp-emb").value.trim();
+  const errEl  = document.getElementById("error-msg");
+  const card   = document.getElementById("result-card");
+  const loading= document.getElementById("loading");
+  const btn    = document.getElementById("btn-buscar");
+  const note   = document.getElementById("demo-note");
+
+  errEl.style.display = "none";
+  card.style.display  = "none";
+
+  if(!codigo || !emb){
+    errEl.textContent = "Por favor ingresá el código de cliente y el número de embarque.";
+    errEl.style.display = "block"; return;
+  }
+
+  btn.disabled = true;
+  loading.style.display = "flex";
+
+  let found = null;
+  try{
+    if(SHEET_URL){
+      const url = `${SHEET_URL}?codigo=${encodeURIComponent(codigo)}&emb=${encodeURIComponent(emb)}`;
+      const res = await fetch(url);
+      found = await res.json();
+    } else {
+      await new Promise(r=>setTimeout(r,650));
+      found = DEMO.find(x => x.codigo === codigo && x.emb === emb) || null;
+    }
+  } catch(e){ found = null; }
+
+  loading.style.display = "none";
+  btn.disabled = false;
+
+  if(!found){
+    errEl.textContent = "No se encontró el embarque. Verificá el código de cliente y el número ingresado.";
+    errEl.style.display = "block";
+    if(!SHEET_URL) note.style.display = "block";
+    return;
+  }
+
+  note.style.display = "none";
+  card.innerHTML = renderCard(found);
+  card.style.display = "block";
+  card.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+document.getElementById("inp-codigo").addEventListener("keydown", e=>{ if(e.key==="Enter") buscar(); });
+document.getElementById("inp-emb").addEventListener("keydown",    e=>{ if(e.key==="Enter") buscar(); });
+</script>
+</body>
+</html>
