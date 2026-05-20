@@ -253,7 +253,7 @@ footer a:hover{text-decoration:underline;}
    Reemplazá esta URL con la que te genera Google Apps Script al implementar.
    Dejala vacía ("") para usar el modo demo con datos de ejemplo.
    ───────────────────────────────────────────────────────────────────────── */
-const SHEET_URL = "https://script.google.com/macros/s/AKfycbwYqgLrMQOtDEWcOA-4_3Nez89oiXzskJQNHbG-i7IpZowZL9d0IielIgWQkPAtzSm5iw/exec";
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbweUrh5j_8At-GTuJmenS4wgfl3vuLFVwr4OcAmSlJq110sjuvun5cr3ao8TyjGBFANWQ/exec";
 
 /* ── DATOS DEMO ────────────────────────────────────────────────────────────
    Estos datos se usan solo cuando SHEET_URL está vacía.
@@ -357,8 +357,19 @@ async function buscar(){
   try{
     if(SHEET_URL){
       const url = `${SHEET_URL}?codigo=${encodeURIComponent(codigo)}&emb=${encodeURIComponent(emb)}`;
-      const res = await fetch(url);
-      found = await res.json();
+      found = await new Promise((resolve, reject) => {
+        const cb = "cb_" + Date.now();
+        const script = document.createElement("script");
+        window[cb] = (data) => {
+          delete window[cb];
+          document.body.removeChild(script);
+          resolve(data);
+        };
+        script.onerror = () => { delete window[cb]; document.body.removeChild(script); reject(); };
+        script.src = url + "&callback=" + cb;
+        document.body.appendChild(script);
+        setTimeout(() => { if(window[cb]){ delete window[cb]; reject(); } }, 10000);
+      });
     } else {
       await new Promise(r=>setTimeout(r,650));
       found = DEMO.find(x => x.codigo === codigo && x.emb === emb) || null;
