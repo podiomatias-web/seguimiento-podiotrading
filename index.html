@@ -291,7 +291,19 @@ function timeline(st, etd, eta){
   return h + `</div><div class="tl-dates"><span>ETD: ${etd||'-'}</span><span>ETA: ${eta||'-'}</span></div>`;
 }
 
+function formatDate(val){
+  if(!val) return "-";
+  const s = String(val);
+  if(s.includes("T")){
+    const d = new Date(s);
+    if(!isNaN(d)) return d.toLocaleDateString("es-AR",{day:"2-digit",month:"2-digit",year:"2-digit"});
+  }
+  return s;
+}
+
 function renderCard(e){
+  e.etd = formatDate(e.etd);
+  e.eta = formatDate(e.eta);
   const buque = e.buque || "";
   const marine = `https://www.marinetraffic.com/en/ais/home/shipname:${encodeURIComponent(buque)}`;
   return `
